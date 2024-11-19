@@ -77,5 +77,5 @@ Feel free to fork this repository or contribute by submitting pull requests!
 ---
 
 ## License
-[MIT License](LICENSE)
+This project is licensed under the terms of the [Apache License 2.0](LICENSE).
 
