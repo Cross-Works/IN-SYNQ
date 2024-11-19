@@ -2,6 +2,8 @@
 
 This repository is a **proof of concept** for creating a TCP connection between Rhino/Grasshopper and Unreal Engine. It allows the transmission of mesh data from Grasshopper to Unreal Engine, where the meshes are rendered dynamically using the **Procedural Mesh Module**.
 
+[Watch the Demo Video](https://video.wixstatic.com/video/a00a00_64c7bd89058943f78b43cc540644d094/1080p/mp4/file.mp4)
+
 ## How It Works
 
 - **Grasshopper Script (`TCPServer.gh`)**: Acts as a TCP server. It takes a mesh as input and transmits the mesh data over a TCP connection.
