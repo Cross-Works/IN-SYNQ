@@ -1,0 +1,18 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{5d1ff583-f6be-441b-a4e0-5564a6c5c25b}") = "IN-SYNQ.Components", "IN-SYNQ.Components\IN-SYNQ.Components.csproj", "{c3a8ac42-cad9-4911-9b20-7403dd8ce6d8}"
+EndProject
+
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{c3a8ac42-cad9-4911-9b20-7403dd8ce6d8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{c3a8ac42-cad9-4911-9b20-7403dd8ce6d8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{c3a8ac42-cad9-4911-9b20-7403dd8ce6d8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{c3a8ac42-cad9-4911-9b20-7403dd8ce6d8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

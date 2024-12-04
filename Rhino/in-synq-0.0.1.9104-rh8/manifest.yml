@@ -1,0 +1,10 @@
+---
+name: IN-SYNQ
+version: 0.0.1.9104
+authors:
+- Nauzet Lopez Hernandez
+description: Proof of concept for creating a TCP connection between Rhino/Grasshopper and Unreal Engine. It allows the transmission of mesh data from Grasshopper to Unreal Engine, where the meshes are rendered dynamically using the Procedural Mesh Module.
+license: Apache License 2.0
+url: https://www.cross-works.co.uk/in-synq
+keywords:
+- guid:5d1ff583-f6be-441b-a4e0-5564a6c5c25b
