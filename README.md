@@ -6,7 +6,7 @@ This repository is a **proof of concept** for creating a TCP connection between 
 
 ## How It Works
 
-- **Grasshopper Script (`TCPServer.gh`)**: Acts as a TCP server. It takes a mesh as input and transmits the mesh data over a TCP connection.
+- **Grasshopper Script (`IN-SYNQ_0.0.1.gh`)**: Acts as a TCP server. It takes a mesh as input and transmits the mesh data over a TCP connection.
 - **Unreal Engine Plugin**: Listens for TCP requests containing mesh data and uses the **Procedural Mesh Module** to create and render the mesh in Unreal Engine.
 
 ### Current Configuration
@@ -19,39 +19,109 @@ These settings can be modified in both the Grasshopper script and the Unreal Eng
 
 ## Installation and Usage
 
-### 1. Grasshopper Script
-1. Open `TCPServer.gh` in Grasshopper.
-2. Ensure it is set to run **before** starting Unreal Engine.
+### Prerequisites
 
-### 2. Unreal Engine Plugin
-1. Copy the plugin folder into your Unreal Engine project’s `Plugins` directory.
-2. Open the Unreal Engine project in **Visual Studio** to build the plugin:
-   - Right-click on the project in Visual Studio and select **Build**.
-3. Once built, launch Unreal Engine.
-4. The plugin will automatically attempt to connect to the Grasshopper script (ensure the script is already running).
+Ensure you have the following software installed (preferably the latest versions):
+1. **Unreal Engine**
+2. **Visual Studio**
+3. **Rhino**
+4. **Grasshopper**
 
-### 3. Initializing the Mesh
-- Use the **"InitializeMesh"** command in Unreal Engine to start polling for mesh data from the Grasshopper TCP server.
-- After the connection is established, **recompute the Grasshopper script** to send the mesh data again.
-- Note: If Unreal Engine is not focused (e.g., in the background), data transmission might appear frozen until you refocus Unreal Engine.
+### Step 1: Download Project Files
+
+- **Grasshopper Script**: Download the script from the GitHub repository.
+- **Unreal Engine Plugin**: Download the plugin files from the same repository.
+
+### Step 2: Set Up the Unreal Engine Project
+
+1. **Create or Use an Existing C++ Project**  
+   - Create a new Unreal Engine C++ project or use an existing one.
+
+2. **Add the In-SYNQ Plugin**  
+   - Place the plugin folder into your project’s `Plugins` directory.  
+   *(If the `Plugins` folder doesn’t exist, create it.)*
+
+3. **Generate Visual Studio Files**  
+   - Locate the `.uproject` file inside your project folder.  
+   - **Shift+Right Click** on it, select **"Generate Visual Studio Project Files"**.  
+
+4. **Convert Blueprint Projects (Optional)**  
+   - To use C++ in a Blueprint project, generate Visual Studio project files and add at least one C++ class.  
+   - [Follow this guide for details](https://dev.epicgames.com/documentation/en-us/unreal-engine/using-the-cplusplus-class-wizard-in-unreal-engine).
+   - You’ll know it’s successful if you see the `.sln` file in your project folder.
+
+5. **Open the Project in Visual Studio**  
+   - Double-click the `.sln` file to open it.  
+   - Navigate to `Games/ProjectName/Plugins/` to locate the plugin files for editing.
+
+6. **Build the Project**  
+   - Click on the **Build** tab and select **Build Solution**.  
+   - Ignore minor errors or warnings as long as the **Build Output** confirms the build completed successfully.
+
+7. **Verify Plugin Installation**  
+   - Open Unreal Engine and search for the "Rhino" plugin in the **Plugins Menu**.  
+   - Close Unreal Engine after verifying it is present and installed.
+
+### Step 3: Grasshoper Definition
+
+1. Open `IN-SYNQ_0.0.1.gh` in Grasshopper by double-clicking it or opening it through Rhino.
+2. Set the mesh you wish to transmit into the mesh input.
+3. We have added some components to the definition to facilitate the transmission. Feel free to modify at your own discretion.
+4. Click on the toggle to start the TCP server.
+5. Ensure the script is running **before launching Unreal Engine**.
+
+**OR**
+
+### Step 3: Open the XW Built IN-SYNQ Grasshopper Component 
+
+1. Install the XW Built IN-SYNQ Grasshopper Component using the `.yak` installer or by dragging the `.gha` file into your Grasshopper library folder.
+2. Restart Rhino and Grasshopper.
+3. You should now see an **"IN-SYNQ"** tab inside Grasshopper.
+4. Select the component to start building your own Grasshopper definition.
+5. Ensure you are using port `8080`, or adjust it in the Unreal Engine Plugin settings if needed.
+6. **Note:** This is a pre-built component, and the C# script itself cannot be accessed or edited.
+7. **Note:** Some fixes to known issues have been added to this component:
+   - **Mesh Joint Component:** Allows input of multiple meshes by joining them.
+   - **Flip Mesh Component:** Ensures normals are always facing outward.
+   - **Data Dam Component:** Introduces a 2-second delay in data transmission to prevent server overload.
+8. Ensure the script is running **before launching Unreal Engine**.
+
+### Step 4: Launch the Unreal Engine Plugin
+
+1. Start Unreal Engine after confirming the Grasshopper script is running.
+2. The plugin will attempt to connect to Grasshopper automatically via `localhost` on port `8080`.  
+   *(Ensure the Grasshopper script is active to establish the connection.)*
+
+### Step 5: Initialize the Mesh
+
+- Verify the connection by checking the console. You can filter the logs by searching for [RhinoPlugin] to view messages from the plugin exclusively.
+- Use the **"InitializeMesh"** command in Unreal Engine to start receiving mesh data from the Grasshopper TCP server.
+- **Note:** If Unreal Engine is in the background, data transmission may appear frozen. Refocus Unreal Engine to resume.
 
 ---
 
 ## Known Issues
-- Unreal Engine may **crash** when closing if the connection is active.
-- The Grasshopper script must be started **before** opening Unreal Engine.
-- After establishing the connection, the Grasshopper script may require a **recompute** to send the mesh data.
-- Unreal Engine may appear to **freeze** when in the background. Refocusing the application can resume data transmission.
-- The plugin does not include binaries or intermediate files and must be built in Visual Studio as outlined above.
+
+- **Crashes on Closing:** Unreal Engine may crash when closing if the connection is active. This is likely due to the connection not being properly terminated before the editor shuts down.
+- **Grasshopper Script Order:** The Grasshopper script must be started **before** opening Unreal Engine.
+- **Recompute Required:** After establishing the connection, the Grasshopper script may require a recompute to send the mesh data.
+- **Freezing in Background:** Unreal Engine may appear to freeze when in the background. Refocusing the application can resume data transmission.
+- **Plugin Build Requirements:** The plugin does not include binaries or intermediate files and must be built in Visual Studio as outlined above.
+- **Axis Misalignment:** Grasshopper’s X and Y axes are flipped compared to Unreal Engine's.
+- **Flipped Normals:** Procedurally dynamic meshes in Unreal Engine may occasionally have their normals flipped.
+- **Tree Access Limitation:** The current C# script does not support tree access, meaning only individual meshes can be used as input.
 
 ---
 
 ## Future Improvements
 
 ### Short-Term Improvements
-- Fix crashes when closing Unreal Engine.
-- Allow the Grasshopper script to start after Unreal Engine without issues.
-- Resolve Unreal Engine freezing when in the background.
+- **Connection Termination Command:** Implement a command to terminate the connection gracefully.
+- **Crash Fixes:** Address crashes that occur when closing Unreal Engine with an active connection.
+- **Script Initialization Flexibility:** Enable the Grasshopper script to start after Unreal Engine without causing issues.
+- **Background Freezing Fix:** Resolve the Unreal Engine freezing issue when running in the background.
+- **Axis Alignment:** Add automatic adjustment to align Grasshopper's axes with Unreal Engine's coordinate system.
+- **Normal Orientation Fix:** Ensure procedurally dynamic meshes in Unreal Engine consistently render with correct normals.
 
 ### Long-Term Improvements
 1. **Send Multiple Meshes**: Expand functionality to support multiple meshes.
