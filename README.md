@@ -17,6 +17,55 @@ These settings can be modified in both the Grasshopper script and the Unreal Eng
 
 ---
 
+## Code Overview
+
+This project consists of three main components:
+
+### 1\. **Grasshopper Script**
+
+The Grasshopper script acts as a TCP server. It takes a mesh as input, serializes its data (vertices and faces), and sends it over a TCP connection. The script is designed for easy integration and modification, allowing you to:
+
+-   Add new components for preprocessing meshes (e.g., normal flipping, combining meshes).
+-   Adjust the IP address and port for the TCP connection.
+
+To edit the Grasshopper script, open it in Rhino and modify the logic or parameters as needed. Ensure you recompute the script after making changes to apply them.
+
+### 2\. **Unreal Engine Plugin**
+
+The Unreal Engine plugin handles the reception and rendering of mesh data. It contains the following key files:
+
+#### - **`Rhino.h` and `Rhino.cpp`**
+
+-   Manages the plugin lifecycle (`StartupModule` and `ShutdownModule`).
+-   Contains the `InitializeMesh` function to create a procedural mesh component dynamically in the Unreal Engine world.
+-   Sets up a timer to poll for incoming data from the Grasshopper TCP server.
+
+#### - **`TCPClient.h` and `TCPClient.cpp`**
+
+-   Handles the TCP connection and message parsing.
+-   Includes methods for connecting to the server, sending data, and parsing incoming JSON messages.
+-   The `CreateMesh` function converts parsed mesh data (vertices and triangles) into a procedural mesh in Unreal Engine.
+
+#### - **Procedural Mesh Creation**
+
+The procedural mesh component (`UProceduralMeshComponent`) is dynamically created in the Unreal Engine scene. It is attached to a new actor, which allows you to:
+
+-   Customize the actor's location and behavior in the Unreal Engine world.
+-   Add materials, collision properties, and other features to the mesh.
+
+### 3\. **JSON Mesh Data Parsing**
+
+Incoming mesh data is serialized as JSON with the following structure:
+
+`{
+  "vertices": [[x1, y1, z1], [x2, y2, z2], ...],
+  "faces": [[v1, v2, v3], [v4, v5, v6], ...]
+}`
+
+The plugin deserializes this JSON, extracts the vertices and faces, and uses them to generate a mesh in Unreal Engine. You can expand the JSON structure to include additional attributes (e.g., normals, colors, UVs) and update the parsing logic in `TCPClient.cpp` to support these features.
+
+---
+
 ## Installation and Usage
 
 ### Prerequisites
