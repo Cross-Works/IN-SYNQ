@@ -28,7 +28,7 @@ public:
     void ParseAndCreateMesh(const FString& JsonString);
 
     // Helper method to create the mesh from vertices and triangles
-    void CreateMesh(const TArray<FVector>& Vertices, const TArray<int32>& Triangles);
+    void CreateMesh(const FString& MeshID, const TArray<FVector>& Vertices, const TArray<int32>& Triangles);
 
     // Pointer to ProceduralMeshComponent for mesh creation
     UProceduralMeshComponent* ProceduralMesh; // Make this public or add a setter method
@@ -42,5 +42,11 @@ private:
 
     // Accumulates received data until a complete JSON message is available
     FString DataBuffer; 
+
+    // Track how many meshes we've created (can be removed later if using IDs exclusively)
+    int32 MeshesCreated = 0;
+
+    // Add this line to track spawned mesh actors by ID
+    TMap<FString, AActor*> MeshActorMap;
 
 };

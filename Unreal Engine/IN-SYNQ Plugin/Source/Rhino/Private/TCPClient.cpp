@@ -6,7 +6,7 @@
 #include "Json.h"
 
 TCPClient::TCPClient()
-    : ClientSocket(nullptr), ProceduralMesh(nullptr)
+    : ClientSocket(nullptr)
 {
 }
 
@@ -116,7 +116,7 @@ void TCPClient::PollForMessages()
         if (JsonStart != INDEX_NONE && JsonEnd != INDEX_NONE && JsonStart < JsonEnd)
         {
             FString JsonString = DataBuffer.Mid(JsonStart, JsonEnd - JsonStart + 1);
-            DataBuffer = DataBuffer.RightChop(JsonEnd + 1); // Remove parsed JSON from buffer
+            DataBuffer = DataBuffer.RightChop(JsonEnd + 1);
 
             ParseAndCreateMesh(JsonString);
         }
@@ -143,114 +143,143 @@ void TCPClient::ParseAndCreateMesh(const FString& JsonString)
     {
         UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] JSON deserialization successful."));
 
-        TArray<FVector> Vertices;
-        TArray<int32> Triangles;
-
-        // Parse vertices array
-        if (JsonObject->HasField("vertices"))
+        // Check for array of meshes
+        if (!JsonObject->HasField("meshes"))
         {
-            const TArray<TSharedPtr<FJsonValue>> JsonVertices = JsonObject->GetArrayField(TEXT("vertices"));
-            for (const TSharedPtr<FJsonValue>& Value : JsonVertices)
+            UE_LOG(LogTemp, Error, TEXT("[RhinoPlugin] 'meshes' field not found in JSON."));
+            return;
+        }
+
+        const TArray<TSharedPtr<FJsonValue>> MeshesArray = JsonObject->GetArrayField("meshes");
+        int32 MeshIndex = 0;
+
+        for (const TSharedPtr<FJsonValue>& MeshValue : MeshesArray)
+        {
+            TSharedPtr<FJsonObject> MeshObject = MeshValue->AsObject();
+            if (!MeshObject.IsValid())
             {
-                const TArray<TSharedPtr<FJsonValue>> VertexArray = Value->AsArray();
+                UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Invalid mesh object at index %d"), MeshIndex);
+                continue;
+            }
+
+            TArray<FVector> Vertices;
+            TArray<int32> Triangles;
+
+            // Parse vertices
+            const TArray<TSharedPtr<FJsonValue>> JsonVertices = MeshObject->GetArrayField(TEXT("vertices"));
+            for (const TSharedPtr<FJsonValue>& VertexValue : JsonVertices)
+            {
+                const TArray<TSharedPtr<FJsonValue>> VertexArray = VertexValue->AsArray();
                 if (VertexArray.Num() == 3)
                 {
                     FVector Vertex(VertexArray[0]->AsNumber(), VertexArray[1]->AsNumber(), VertexArray[2]->AsNumber());
                     Vertices.Add(Vertex);
-                    UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Parsed vertex: %s"), *Vertex.ToString());
-                }
-                else
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Invalid vertex array size: %d"), static_cast<int32>(VertexArray.Num()));
                 }
             }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] 'vertices' field not found in JSON."));
-        }
 
-        // Parse faces array (triangles or quads)
-        if (JsonObject->HasField("faces"))
-        {
-            const TArray<TSharedPtr<FJsonValue>> JsonFaces = JsonObject->GetArrayField(TEXT("faces"));
-            for (const TSharedPtr<FJsonValue>& Value : JsonFaces)
+            // Parse faces
+            const TArray<TSharedPtr<FJsonValue>> JsonFaces = MeshObject->GetArrayField(TEXT("faces"));
+            for (const TSharedPtr<FJsonValue>& FaceValue : JsonFaces)
             {
-                const TArray<TSharedPtr<FJsonValue>> FaceArray = Value->AsArray();
+                const TArray<TSharedPtr<FJsonValue>> FaceArray = FaceValue->AsArray();
                 if (FaceArray.Num() >= 3)
                 {
                     Triangles.Add(FaceArray[0]->AsNumber());
                     Triangles.Add(FaceArray[1]->AsNumber());
                     Triangles.Add(FaceArray[2]->AsNumber());
 
-                    if (FaceArray.Num() == 4) // Handle quad as two triangles
+                    if (FaceArray.Num() == 4) // Convert quad to 2 triangles
                     {
                         Triangles.Add(FaceArray[0]->AsNumber());
                         Triangles.Add(FaceArray[2]->AsNumber());
                         Triangles.Add(FaceArray[3]->AsNumber());
                     }
-
-                    UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Parsed face with vertices: %d, %d, %d"),
-                        static_cast<int32>(FaceArray[0]->AsNumber()),
-                        static_cast<int32>(FaceArray[1]->AsNumber()),
-                        static_cast<int32>(FaceArray[2]->AsNumber()));
-
-                }
-                else
-                {
-                    UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Invalid face array size: %d"), static_cast<int32>(FaceArray.Num()));
                 }
             }
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] 'faces' field not found in JSON."));
+
+            if (Vertices.Num() > 0 && Triangles.Num() > 0)
+            {
+                FString MeshID = MeshObject->GetStringField(TEXT("id")); 
+                CreateMesh(MeshID, Vertices, Triangles); 
+                UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Mesh %d (%s) created or updated."), MeshIndex, *MeshID);
+            }
+
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Mesh %d has invalid geometry."), MeshIndex);
+            }
+
+            MeshIndex++;
         }
 
-        // Create the mesh if data is valid
-        if (Vertices.Num() > 0 && Triangles.Num() > 0)
-        {
-            CreateMesh(Vertices, Triangles);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Insufficient data to create mesh: %d vertices, %d triangles."),
-                static_cast<int32>(Vertices.Num()), static_cast<int32>(Triangles.Num() / 3));
-
-        }
-
-        // Clear the buffer after successful parsing
+        // Clear buffer after success
         DataBuffer.Empty();
     }
     else
     {
-        UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Failed to parse JSON mesh data. Retaining data in buffer for next call."));
+        UE_LOG(LogTemp, Warning, TEXT("[RhinoPlugin] Failed to parse JSON mesh data."));
     }
 }
 
 
-void TCPClient::CreateMesh(const TArray<FVector>& Vertices, const TArray<int32>& Triangles)
+
+void TCPClient::CreateMesh(const FString& MeshID, const TArray<FVector>& Vertices, const TArray<int32>& Triangles)
 {
-    if (!ProceduralMesh) // Check if ProceduralMeshComponent is assigned
+    if (!GEngine) return;
+
+    UWorld* World = GEngine->GetWorldContexts()[0].World();
+    if (!World) return;
+
+    AActor* MeshActor = nullptr;
+
+    // Check if this mesh already exists
+    if (MeshActorMap.Contains(MeshID))
     {
-        UE_LOG(LogTemp, Error, TEXT("[RhinoPlugin] ProceduralMeshComponent is not assigned!"));
-        return;
+        MeshActor = MeshActorMap[MeshID];
+        UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Updating existing mesh actor: %s"), *MeshID);
+    }
+    else
+    {
+        // Create a new Actor
+        MeshActor = World->SpawnActor<AActor>(AActor::StaticClass());
+        MeshActorMap.Add(MeshID, MeshActor);
+        UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Created new mesh actor: %s"), *MeshID);
     }
 
-    // Clear any existing mesh data
-    ProceduralMesh->ClearAllMeshSections();
+    //Check for existing procedural mesh component or create new
+    UProceduralMeshComponent* MeshComp = nullptr;
+    TArray<UProceduralMeshComponent*> Components;
+    MeshActor->GetComponents<UProceduralMeshComponent>(Components);
+    if (Components.Num() > 0)
+    {
+        MeshComp = Cast<UProceduralMeshComponent>(Components[0]);
+    }
+    else
+    {
+        MeshComp = NewObject<UProceduralMeshComponent>(MeshActor);
+        MeshComp->RegisterComponent();
+        MeshActor->AddInstanceComponent(MeshComp);
+    }
 
-    // Create a new mesh section
-    ProceduralMesh->CreateMeshSection_LinearColor(
-        0,           // Mesh section index
-        Vertices,    // Vertices array
-        Triangles,   // Triangles array
-        TArray<FVector>(),        // Normals (empty array will auto-calculate)
-        TArray<FVector2D>(),      // UVs (empty for now)
-        TArray<FLinearColor>(),   // Vertex colors
-        TArray<FProcMeshTangent>(), // Tangents
-        true         // Enable collision
+    if (!MeshComp) return;
+
+    MeshComp->ClearAllMeshSections();
+    MeshComp->CreateMeshSection_LinearColor(
+        0,
+        Vertices,
+        Triangles,
+        TArray<FVector>(),        
+        TArray<FVector2D>(),       
+        TArray<FLinearColor>(),    
+        TArray<FProcMeshTangent>(),
+        true                       
     );
 
-    UE_LOG(LogTemp, Log, TEXT("[RhinoPlugin] Mesh created with %d vertices and %d triangles."), Vertices.Num(), Triangles.Num() / 3);
+    // Positioning offset (optional: based on hash to spread things out)
+    uint32 Hash = GetTypeHash(MeshID);
+    float OffsetX = (Hash % 500) - 250;
+    float OffsetY = ((Hash / 1000) % 500) - 250;
+    MeshActor->SetActorLocation(FVector(OffsetX, OffsetY, 0));
 }
+
+
