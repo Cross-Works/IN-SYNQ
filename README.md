@@ -151,7 +151,7 @@ Ensure you have the following software installed (preferably the latest versions
 
 ## Known Issues
 
-- **Crashes on Closing:** Unreal Engine may crash when closing if the connection is active. This is likely due to the connection not being properly terminated before the editor shuts down.
+- **Crashes on Closing:** Unreal Engine may crash when closing if the connection is active. This is likely due to the connection not being properly terminated before the editor shuts down. (✅ Resolved: A `StopMeshSync` console command has been implemented to safely terminate the connection before shutdown.)
 - **Grasshopper Script Order:** The Grasshopper script must be started **before** opening Unreal Engine.
 - **Recompute Required:** After establishing the connection, the Grasshopper script may require a recompute to send the mesh data.
 - **Freezing in Background:** Unreal Engine may appear to freeze when in the background. Refocusing the application can resume data transmission.
@@ -165,7 +165,7 @@ Ensure you have the following software installed (preferably the latest versions
 ## Future Improvements
 
 ### Short-Term Improvements
-- **Connection Termination Command:** Implement a command to terminate the connection gracefully.
+- **Connection Termination Command:** Implement a command to terminate the connection gracefully. (✅ Implemented: Use `StopMeshSync` in Unreal Engine to disconnect safely.)
 - **Crash Fixes:** Address crashes that occur when closing Unreal Engine with an active connection.
 - **Script Initialization Flexibility:** Enable the Grasshopper script to start after Unreal Engine without causing issues.
 - **Background Freezing Fix:** Resolve the Unreal Engine freezing issue when running in the background.
@@ -173,7 +173,7 @@ Ensure you have the following software installed (preferably the latest versions
 - **Normal Orientation Fix:** Ensure procedurally dynamic meshes in Unreal Engine consistently render with correct normals.
 
 ### Long-Term Improvements
-1. **Send Multiple Meshes**: Expand functionality to support multiple meshes.
+1. **Send Multiple Meshes**: Expand functionality to support multiple meshes. (✅ Implemented: Multiple mesh input from Grasshopper is now supported, each spawning as a separate actor in Unreal Engine.)
 2. **Develop Core Bridge**: Implement Web Socket and serialized file-based bridge for robust data transfer.
 3. **Two-Way Control**: Enable bi-directional communication, allowing Unreal Engine sliders to adjust Grasshopper scripts in real time.
 4. **Multi-User Support**: Enable multiple users to collaborate on LAN and pixel streaming with dedicated Unreal Engine and Rhino instances.

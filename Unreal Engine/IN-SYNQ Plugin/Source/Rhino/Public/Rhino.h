@@ -22,6 +22,7 @@ public:
 
     /** Initializes the Procedural Mesh Component (triggered by the console command or shortcut) */
     void InitializeMesh();
+    void StopMeshSync();
 
 private:
     /** TCP client for communicating with the server */
