@@ -152,7 +152,7 @@ Ensure you have the following software installed (preferably the latest versions
 ## Known Issues
 
 - **Crashes on Closing:** Unreal Engine may crash when closing if the connection is active. This is likely due to the connection not being properly terminated before the editor shuts down. (✅ Resolved: A `StopMeshSync` console command has been implemented to safely terminate the connection before shutdown.)
-- **Grasshopper Script Order:** The Grasshopper script must be started **before** opening Unreal Engine.
+- **Grasshopper Script Order:** The Grasshopper script must be started **before** opening Unreal Engine. (✅ Resolved: Unreal now reconnects automatically if the Grasshopper server starts later.)
 - **Recompute Required:** After establishing the connection, the Grasshopper script may require a recompute to send the mesh data.
 - **Freezing in Background:** Unreal Engine may appear to freeze when in the background. Refocusing the application can resume data transmission.
 - **Plugin Build Requirements:** The plugin does not include binaries or intermediate files and must be built in Visual Studio as outlined above.
@@ -166,8 +166,8 @@ Ensure you have the following software installed (preferably the latest versions
 
 ### Short-Term Improvements
 - **Connection Termination Command:** Implement a command to terminate the connection gracefully. (✅ Implemented: Use `StopMeshSync` in Unreal Engine to disconnect safely.)
-- **Crash Fixes:** Address crashes that occur when closing Unreal Engine with an active connection.
-- **Script Initialization Flexibility:** Enable the Grasshopper script to start after Unreal Engine without causing issues.
+- **Crash Fixes:** Address crashes that occur when closing Unreal Engine with an active connection. (✅ Resolved: Added `StopMeshSync` command to safely terminate connections and avoid crash on exit.)
+- **Script Initialization Flexibility:** Enable the Grasshopper script to start after Unreal Engine without causing issues. (✅ Implemented: Unreal now automatically reconnects to Grasshopper when the TCP server becomes available.)
 - **Background Freezing Fix:** Resolve the Unreal Engine freezing issue when running in the background.
 - **Axis Alignment:** Add automatic adjustment to align Grasshopper's axes with Unreal Engine's coordinate system.
 - **Normal Orientation Fix:** Ensure procedurally dynamic meshes in Unreal Engine consistently render with correct normals.
